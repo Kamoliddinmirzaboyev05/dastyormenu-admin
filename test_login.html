@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+            font-size: 16px;
+        }
+        button {
+            background: #f59e0b;
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #d97706;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #10b981;
+            color: #fff;
+        }
+        .error {
+            background: #ef4444;
+            color: #fff;
+        }
+        .info {
+            background: #3b82f6;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Login Test</h1>
+        <p>Backend API ni test qilish uchun</p>
+        
+        <input type="text" id="apiUrl" placeholder="API URL" value="http://localhost:8000/api/auth/login">
+        <input type="text" id="login" placeholder="Login" value="superadmin">
+        <input type="password" id="password" placeholder="Password" value="kamoliddin">
+        
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testBackend()">Test Backend Connection</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('result');
+            const baseUrl = document.getElementById('apiUrl').value.replace('/api/auth/login', '');
+            
+            resultDiv.innerHTML = '<div class="info">Testing backend connection...</div>';
+            
+            try {
+                const response = await fetch(baseUrl);
+                const data = await response.text();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>✅ Backend Connected!</strong><br>
+                        Status: ${response.status}<br>
+                        Response: ${data}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Backend Connection Failed!</strong><br>
+                        Error: ${error.message}<br><br>
+                        <strong>Yechim:</strong><br>
+                        1. Backend server ishlab turganini tekshiring<br>
+                        2. Port to'g'ri ekanini tekshiring<br>
+                        3. CORS yoqilganini tekshiring
+                    </div>
+                `;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            const apiUrl = document.getElementById('apiUrl').value;
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            
+            resultDiv.innerHTML = '<div class="info">Sending login request...</div>';
+            
+            const requestData = { login, password };
+            
+            console.log('🔵 Request:', apiUrl);
+            console.log('📦 Body:', requestData);
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('🟢 Response Status:', response.status);
+                
+                const contentType = response.headers.get('content-type');
+                console.log('📄 Content-Type:', contentType);
+                
+                let data;
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                console.log('📦 Response Data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Login Successful!</strong><br><br>
+                            <strong>Response:</strong><br>
+                            ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Login Failed!</strong><br>
+                            Status: ${response.status}<br>
+                            Error: ${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}<br><br>
+                            <strong>Backend xatosi:</strong><br>
+                            Backend server loglarini tekshiring
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Request Failed!</strong><br>
+                        Error: ${error.message}<br><br>
+                        <strong>Mumkin bo'lgan sabablar:</strong><br>
+                        1. Backend server ishlamayapti<br>
+                        2. CORS yoqilmagan<br>
+                        3. Noto'g'ri URL<br>
+                        4. Network xatosi
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
