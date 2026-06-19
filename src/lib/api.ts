@@ -2,7 +2,7 @@
 
 import { ApiResponse, ApiError, API_MESSAGES } from './apiTypes';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dastyormenu-backend-production.up.railway.app';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dastyorapi.webportfolio.uz';
 const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 30000;
 
 export type { ApiResponse, ApiError };

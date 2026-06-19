@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://dastyormenu-backend-production.up.railway.app',
+        target: 'https://dastyorapi.webportfolio.uz',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
@@ -52,7 +52,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/dastyormenu-backend-production\.up\.railway\.app\/api\/.*/i,
+            urlPattern: /^https:\/\/dastyorapi\.webportfolio\.uz\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
