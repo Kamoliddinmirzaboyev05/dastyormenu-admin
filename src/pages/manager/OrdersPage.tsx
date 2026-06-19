@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, RefreshCw } from 'lucide-react';
 import { useOrders } from '../../hooks/useOrders';
 import { useRealtimeOrders } from '../../hooks/useRealtime';
+import { orderService } from '../../lib/orderService';
 import { useToast } from '../../lib/toast';
 import { Order, OrderStatus, formatPrice } from '../../lib/types';
 import { useAuthStore } from '../../store/authStore';
@@ -48,15 +49,24 @@ const OrdersPage: React.FC = () => {
 
   const updateStatus = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingId(orderId);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Mock update
-    success('Status yangilandi');
-    refetch();
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+
+    try {
+      const response = await orderService.updateStatus(orderId, newStatus);
+
+      if (response.success) {
+        success('Status yangilandi');
+        if (selectedOrder?.id === orderId) {
+          setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+        }
+        refetch();
+      } else {
+        toastError(response.error?.message || 'Status yangilanmadi');
+      }
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : 'Status yangilanmadi');
+    } finally {
+      setUpdatingId(null);
     }
-    setUpdatingId(null);
   };
 
   const formatTime = (iso: string) => {

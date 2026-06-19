@@ -1,12 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Order, OrderStatus } from '../lib/types';
 import { useAuthStore } from '../store/authStore';
-
-// Temporary mock data until orders API is integrated
-const mockOrders: Order[] = [];
-const mockOrderItems: any[] = [];
-const mockTables: any[] = [];
-const mockUsers: any[] = [];
+import { orderService } from '../lib/orderService';
 
 interface UseOrdersOptions {
   status?: OrderStatus | 'all';
@@ -26,29 +21,17 @@ export function useOrders(options: UseOrdersOptions = {}) {
     setError(null);
 
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const response = await orderService.getOrders({
+        status: options.status,
+        date: options.date,
+        tableId: options.tableId,
+      });
 
-      let filtered = [...mockOrders].map(order => ({
-        ...order,
-        table: mockTables.find(t => t.id === order.table_id),
-        waiter: mockUsers.find(u => u.id === order.waiter_id),
-        order_items: mockOrderItems.filter(item => item.order_id === order.id),
-      }));
-
-      if (options.status && options.status !== 'all') {
-        filtered = filtered.filter(o => o.status === options.status);
+      if (response.success) {
+        setOrders(response.data || []);
+      } else {
+        setError(response.error?.message || 'Buyurtmalar yuklanmadi');
       }
-
-      if (options.date) {
-        filtered = filtered.filter(o => o.created_at.startsWith(options.date!));
-      }
-
-      if (options.tableId) {
-        filtered = filtered.filter(o => o.table_id === options.tableId);
-      }
-
-      setOrders(filtered);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik yuz berdi');
     } finally {
@@ -61,6 +44,8 @@ export function useOrders(options: UseOrdersOptions = {}) {
   return { orders, loading, error, refetch: fetchOrders };
 }
 
+const ACTIVE_STATUSES: OrderStatus[] = ['pending', 'cooking', 'ready'];
+
 export function useTodayStats() {
   const { organization } = useAuthStore();
   const [stats, setStats] = useState({
@@ -68,39 +53,42 @@ export function useTodayStats() {
     todayOrders: 0,
     activeOrders: 0,
     todayCustomers: 0,
-    revenueChange: 12,
-    ordersChange: 5,
+    revenueChange: 0,
+    ordersChange: 0,
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchStats = useCallback(async () => {
     if (!organization) return;
+    setLoading(true);
 
-    const fetchStats = async () => {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const response = await orderService.getOrders({ date: today });
+      const orders = response.success ? (response.data || []) : [];
 
-      const todayRevenue = mockOrders
+      const todayRevenue = orders
         .filter(o => o.status === 'completed')
         .reduce((sum, o) => sum + o.total_amount, 0);
 
-      const activeOrders = mockOrders.filter(o => 
-        ['pending', 'cooking', 'ready'].includes(o.status)
-      ).length;
+      const activeOrders = orders.filter(o => ACTIVE_STATUSES.includes(o.status)).length;
 
       setStats({
         todayRevenue,
-        todayOrders: mockOrders.length,
+        todayOrders: orders.length,
         activeOrders,
-        todayCustomers: new Set(mockOrders.map(o => o.table_id)).size,
-        revenueChange: 12,
-        ordersChange: 5,
+        todayCustomers: new Set(orders.map(o => o.table_id)).size,
+        revenueChange: 0,
+        ordersChange: 0,
       });
+    } catch {
+      // keep previous stats on error
+    } finally {
       setLoading(false);
-    };
-
-    fetchStats();
+    }
   }, [organization]);
 
-  return { stats, loading };
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  return { stats, loading, refetch: fetchStats };
 }
