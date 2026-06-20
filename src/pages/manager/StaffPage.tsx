@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { staffSchema, type StaffFormData } from '../../lib/validators';
 import { Plus, Eye, EyeOff, Copy, RefreshCw, Trash2, X } from 'lucide-react';
 import { UserProfile } from '../../lib/types';
 import { useAuthStore } from '../../store/authStore';
@@ -11,14 +11,7 @@ import { TableSkeleton } from '../../components/UI/LoadingSkeleton';
 import Button from '../../components/UI/Button';
 import { staffService } from '../../lib/staffService';
 
-const staffSchema = z.object({
-  full_name: z.string().min(2, "Ism kamida 2 ta belgidan iborat bo'lishi kerak"),
-  role: z.enum(['chef', 'waiter']),
-  username: z.string().min(3, "Login kamida 3 ta belgidan iborat bo'lishi kerak").regex(/^[a-z0-9_]+$/, "Faqat kichik harflar, raqamlar va _ belgisidan foydalaning"),
-  password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
-});
-
-type StaffFormData = z.infer<typeof staffSchema>;
+// staffSchema + StaffFormData now live in src/lib/validators.ts
 
 const generatePassword = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';

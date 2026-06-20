@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Switch from '@radix-ui/react-switch';
 import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { menuSchema, type MenuFormData } from '../../lib/validators';
 import { Plus, Pencil, Trash2, Upload, X, ImageIcon } from 'lucide-react';
 import { useMenu } from '../../hooks/useMenu';
 import { useToast } from '../../lib/toast';
@@ -14,27 +14,7 @@ import Button from '../../components/UI/Button';
 import { categoryService } from '../../lib/categoryService';
 import { menuService } from '../../lib/menuService';
 
-// ─── Form schema ──────────────────────────────────────────────────────────────
-const menuSchema = z.object({
-  name: z.string()
-    .min(1, "Taom nomini kiriting")
-    .min(2, "Taom nomi kamida 2 ta belgidan iborat bo'lishi kerak")
-    .max(100, "Taom nomi 100 ta belgidan oshmasligi kerak"),
-  category_id: z.string().min(1, "Kategoriyani tanlang"),
-  price_som: z.number({ invalid_type_error: "Narxni kiriting" })
-    .min(100, "Narx kamida 100 so'm bo'lishi kerak")
-    .max(10000000, "Narx 10,000,000 so'mdan oshmasligi kerak"),
-  description: z.string().max(500, "Tavsif 500 ta belgidan oshmasligi kerak").optional(),
-  ingredients: z.string().max(500, "Tarkib 500 ta belgidan oshmasligi kerak").optional(),
-  cook_time_minutes: z.number()
-    .min(1, "Pishirish vaqti kamida 1 daqiqa bo'lishi kerak")
-    .max(300, "Pishirish vaqti 300 daqiqadan oshmasligi kerak")
-    .default(15),
-  is_available: z.boolean().default(true),
-  sort_order: z.number().optional(),
-});
-
-type MenuFormData = z.infer<typeof menuSchema>;
+// Form schema + MenuFormData now live in src/lib/validators.ts
 
 // ─── Category Modal ───────────────────────────────────────────────────────────
 const CategoryModal: React.FC<{
